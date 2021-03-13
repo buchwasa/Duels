@@ -1,0 +1,5 @@
+name: Duels
+version: 1.0.0
+author: ShockTeam
+api: 4.0.0
+main: practice\Loader
