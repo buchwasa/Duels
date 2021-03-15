@@ -2,9 +2,10 @@
 
 namespace practice\task;
 
+use muqsit\chunkloader\ChunkRegion;
 use practice\kits\Kit;
 use pocketmine\scheduler\Task;
-use pocketmine\utils\TextFormat;
+use pocketmine\utils\TextFormat as TF;
 use pocketmine\world\Position;
 use pocketmine\world\World;
 use pocketmine\world\WorldException;
@@ -24,10 +25,10 @@ class MatchTask extends Task
     private Kit $kit;
     /** @var World */
     private World $level;
-    /** @var string */
-    private string $winner = "None";
-    /** @var string */
-    private string $loser = "None";
+    /** @var PracticePlayer|null */
+    private ?PracticePlayer $winner = null;
+    /** @var PracticePlayer|null */
+    private ?PracticePlayer $loser = null;
 
     public function __construct(Loader $plugin, string $name, PracticePlayer $player1, PracticePlayer $player2, Kit $kit)
     {
@@ -47,21 +48,28 @@ class MatchTask extends Task
     {
         foreach ($this->getPlayers() as $player) {
             if ($player->isOnline()) {
-                $player->setScoreTag(floor($player->getHealth()) . TextFormat::RED . " ❤");
+                $player->setScoreTag(floor($player->getHealth() / 2) . TF::RED . " ❤");
                 if (!$player->isPlaying()) {
-                    $this->loser = $player->getName();
-                    $this->winner = $player->getName() !== $this->player1->getName() ? $this->player1->getName() : $this->player2->getName();
-                    $this->onEnd(null);
+                    $this->loser = $player;
+                    $this->winner = $player->getName() !== $this->player1->getName() ? $this->player1 : $this->player2;
+                    $this->time = 0;
                 }
             } else {
+                $this->loser = $player;
+                $this->winner = $player->getName() !== $this->player1->getName() ? $this->player1 : $this->player2;
                 $this->onEnd($player);
             }
         }
 
         switch ($this->time) {
             case 902:
-                $this->player1->teleport(new Position(15, 4, 40, $this->level));
-                $this->player2->teleport(new Position(15, 4, 10, $this->level));
+                ChunkRegion::onChunkGenerated($this->level, 15 >> 4, 40 >> 4, function () {
+                    $this->player1->teleport(new Position(15, 4, 40, $this->level));
+                });
+
+                ChunkRegion::onChunkGenerated($this->level, 15 >> 4, 10 >> 4, function () {
+                    $this->player2->teleport(new Position(15, 4, 10, $this->level));
+                });
                 break;
             case 901:
                 foreach ($this->getPlayers() as $player) {
@@ -72,30 +80,38 @@ class MatchTask extends Task
                 }
                 break;
             case 0:
-                $this->onEnd(null);
+                $this->onEnd();
                 break;
         }
 
         $this->time--;
     }
 
-    public function onEnd(?PracticePlayer $playerLeft): void
+    public function onEnd(?PracticePlayer $playerLeft = null): void
     {
         foreach ($this->getPlayers() as $online) {
             if (is_null($playerLeft) || $online->getName() !== $playerLeft->getName()) {
-                $online->sendMessage(TextFormat::GRAY . "---------------");
-                $online->sendMessage(TextFormat::GOLD . "Winner: " . TextFormat::WHITE . $this->winner);
-                $online->sendMessage(TextFormat::YELLOW . "Loser: " . TextFormat::WHITE . $this->loser);
-                $online->sendMessage(TextFormat::GRAY . "---------------");
+                $online->sendMessage(TF::GRAY . "---------------");
+
+                $winnerMessage = TF::GOLD . "Winner: " . TF::WHITE;
+                if ($this->winner === null) {
+                    $winnerMessage .= "None";
+                } else {
+                    $winnerMessage .= $this->winner->getDisplayName() . " " . floor($this->winner->getHealth() / 2) . TF::RED . " ❤";
+                }
+                $online->sendMessage($winnerMessage);
+
+                $loserMessage = TF::YELLOW . "Loser: " . TF::WHITE;
+                $loserMessage .= $this->loser !== null ? $this->loser->getDisplayName() : "None";
+                $online->sendMessage($loserMessage);
+
+                $online->sendMessage(TF::GRAY . "---------------");
+                $online->resetPlayer();
                 $online->giveLobbyItems();
                 $online->teleport($online->getServer()->getWorldManager()->getDefaultWorld()->getSafeSpawn(), 0, 0);
             }
         }
-        $this->cancel();
-    }
 
-    public function cancel(): void
-    {
         $this->getHandler()->cancel();
         MatchManager::getInstance()->stopMatch($this->level->getFolderName());
     }

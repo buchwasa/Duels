@@ -28,7 +28,7 @@ class SG extends Kit
             VanillaItems::GOLDEN_CARROT(),
             VanillaItems::PUMPKIN_PIE()->setCount(2),
             VanillaItems::BREAD(),
-            VanillaItems::FLINT_AND_STEEL()->setDamage(99),
+            VanillaItems::FLINT_AND_STEEL()->setDamage(64),
             VanillaItems::ARROW()->setCount(8)
         ];
     }

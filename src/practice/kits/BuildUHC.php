@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace practice\kits;
 
-use practice\kits\Kit;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\item\VanillaItems;
 
@@ -24,6 +23,7 @@ class BuildUHC extends Kit
     {
         return [
             VanillaItems::DIAMOND_SWORD(),
+            VanillaItems::BOW(),
             VanillaItems::GOLDEN_APPLE()->setCount(6),
             VanillaItems::STEAK()->setCount(64),
             VanillaItems::WATER_BUCKET(),

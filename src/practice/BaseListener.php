@@ -5,6 +5,7 @@ namespace practice;
 
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockPlaceEvent;
+use pocketmine\event\entity\EntityDamageByChildEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerCreationEvent;
@@ -15,6 +16,7 @@ use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\item\ItemIds;
 use pocketmine\item\VanillaItems;
+use pocketmine\network\mcpe\protocol\PlaySoundPacket;
 use pocketmine\player\GameMode;
 use pocketmine\utils\TextFormat;
 use practice\kits\KitRegistry;
@@ -40,6 +42,9 @@ class BaseListener implements Listener
 
     public function onQuit(PlayerQuitEvent $event)
     {
+        /** @var PracticePlayer $player */
+        $player = $event->getPlayer();
+        $player->setInQueue(false);
         $event->setQuitMessage("");
     }
 
@@ -48,24 +53,31 @@ class BaseListener implements Listener
         $player = $ev->getPlayer();
         $item = $ev->getItem();
         if ($player instanceof PracticePlayer) {
-            if ($player->getWorld()->getDisplayName() === $player->getServer()->getWorldManager()->getDefaultWorld()->getDisplayName() && $item->getId() === ItemIds::COMPASS) {
-                {
-                    $form = new SimpleForm("Kit Selector");
-                    foreach (KitRegistry::getKits() as $kit) {
-                        $form->addButton(new Button($kit->getName()));
-                    }
-                    $form->setCallable(function (PracticePlayer $player, $data) {
-                        if (!is_string($data)) return;
-                        $player->setCurrentKit(KitRegistry::fromString($data));
-                        $player->setInQueue(true);
-                        $player->getInventory()->clearAll();
-                        $player->getInventory()->setItem(0, VanillaItems::PAPER()->setCustomName(TextFormat::RESET . TextFormat::RED . "Leave Queue"));
-                        $player->checkQueue();
-                    });
+            if ($player->getWorld()->getDisplayName() === $player->getServer()->getWorldManager()->getDefaultWorld()->getDisplayName()) {
+                switch ($item->getId()) {
+                    case ItemIds::COMPASS:
+                        $form = new SimpleForm("Kit Selector");
+                        foreach (KitRegistry::getKits() as $kit) {
+                            $form->addButton(new Button($kit->getName()));
+                        }
+                        $form->setCallable(function (PracticePlayer $player, $data) {
+                            if (!is_string($data)) return;
+                            $player->setCurrentKit(KitRegistry::fromString($data));
+                            $player->setInQueue(true);
+                            $player->getInventory()->clearAll();
+                            $player->getInventory()->setItem(0, VanillaItems::PAPER()->setCustomName(TextFormat::RESET . TextFormat::RED . "Leave Queue"));
+                            $player->checkQueue();
+                        });
 
-                    if (!$player->isInQueue()) {
-                        $player->sendForm($form);
-                    }
+                        if (!$player->isInQueue()) {
+                            $player->sendForm($form);
+                        }
+                        break;
+                    case ItemIds::PAPER:
+                        $player->sendMessage(TextFormat::GOLD . "Left the queue");
+                        $player->setInQueue(false);
+                        $player->giveLobbyItems();
+                        break;
                 }
             }
         }
@@ -80,9 +92,24 @@ class BaseListener implements Listener
             } else {
                 /** @var PracticePlayer $entity */
                 $entity = $event->getEntity();
+
+                if ($event instanceof EntityDamageByChildEntityEvent) {
+                    /** @var PracticePlayer $damager */
+                    $damager = $event->getDamager();
+                    $damager->sendMessage(TextFormat::RED . "{$entity->getDisplayName()} is at " . floor($entity->getHealth() / 2) . " HP");
+                    $pk = new PlaySoundPacket();
+                    $pk->soundName = "random.orb";
+                    $pk->x = $damager->getPosition()->getFloorX();
+                    $pk->y = $damager->getPosition()->getFloorY();
+                    $pk->z = $damager->getPosition()->getFloorZ();
+                    $pk->volume = 1.0;
+                    $pk->pitch = 1.0;
+                    $damager->getNetworkSession()->sendDataPacket($pk);
+                }
+
                 if ($entity->isPlaying() && $event->getFinalDamage() >= $entity->getHealth()) {
                     foreach ($entity->getWorld()->getPlayers() as $player) {
-                        $player->sendMessage(TextFormat::RED . "{$player->getDisplayName()} died");
+                        $player->sendMessage(TextFormat::RED . "{$entity->getDisplayName()} died");
                     }
                     $entity->setPlaying(false);
                     $entity->resetPlayer();
@@ -105,9 +132,7 @@ class BaseListener implements Listener
     public function onBreak(BlockBreakEvent $event): void
     {
         $player = $event->getPlayer();
-        if ($player instanceof PracticePlayer && $player->isPlaying() && MatchManager::getInstance()->canUseBlock($event->getBlock())) {
-            return;
-        } else {
+        if (!($player instanceof PracticePlayer && $player->isPlaying() && MatchManager::getInstance()->canUseBlock($event->getBlock()))) {
             $event->cancel();
         }
     }
@@ -115,9 +140,7 @@ class BaseListener implements Listener
     public function onPlace(BlockPlaceEvent $event): void
     {
         $player = $event->getPlayer();
-        if ($player instanceof PracticePlayer && $player->isPlaying() && MatchManager::getInstance()->canUseBlock($event->getBlock())) {
-            return;
-        } else {
+        if (!($player instanceof PracticePlayer && $player->isPlaying() && MatchManager::getInstance()->canUseBlock($event->getBlock()))) {
             $event->cancel();
         }
     }

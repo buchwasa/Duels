@@ -22,12 +22,15 @@ class NoDebuff extends Kit
 
     public function getInventoryItems(): array
     {
-        return [
-            VanillaItems::DIAMOND_SWORD(),
-            VanillaItems::ENDER_PEARL()->setCount(16),
-            VanillaItems::STEAK()->setCount(64),
-            ItemFactory::getInstance()->get(ItemIds::POTION, Potion::SWIFTNESS, 2),
-            ItemFactory::getInstance()->get(ItemIds::SPLASH_POTION, Potion::STRONG_HEALING, 34)
-        ];
+        $contents = [];
+        $contents[] = VanillaItems::DIAMOND_SWORD();
+        $contents[] = VanillaItems::ENDER_PEARL()->setCount(16);
+        $contents[] = VanillaItems::STEAK()->setCount(64);
+        $contents[] = ItemFactory::getInstance()->get(ItemIds::POTION, Potion::SWIFTNESS, 2);
+        for ($i = 0; $i < 32; $i++) {
+            $contents[] = ItemFactory::getInstance()->get(ItemIds::SPLASH_POTION, Potion::STRONG_HEALING, 1);
+        }
+
+        return $contents;
     }
 }
