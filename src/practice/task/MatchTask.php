@@ -52,7 +52,7 @@ class MatchTask extends Task
                 if (!$player->isPlaying()) {
                     $this->loser = $player;
                     $this->winner = $player->getName() !== $this->player1->getName() ? $this->player1 : $this->player2;
-                    $this->time = 0;
+                    $this->onEnd();
                 }
             } else {
                 $this->loser = $player;
@@ -63,12 +63,14 @@ class MatchTask extends Task
 
         switch ($this->time) {
             case 902:
-                ChunkRegion::onChunkGenerated($this->level, 15 >> 4, 40 >> 4, function () {
+                $this->level->orderChunkPopulation(15 >> 4, 40 >> 4, null)->onCompletion(function (): void {
                     $this->player1->teleport(new Position(15, 4, 40, $this->level));
+                }, function (): void {
                 });
 
-                ChunkRegion::onChunkGenerated($this->level, 15 >> 4, 10 >> 4, function () {
+                $this->level->orderChunkPopulation(15 >> 4, 10 >> 4, null)->onCompletion(function (): void {
                     $this->player2->teleport(new Position(15, 4, 10, $this->level));
+                }, function (): void {
                 });
                 break;
             case 901:

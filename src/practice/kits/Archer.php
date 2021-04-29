@@ -3,13 +3,17 @@ declare(strict_types=1);
 
 namespace practice\kits;
 
-use practice\kits\Kit;
+use pocketmine\item\Item;
 use pocketmine\item\enchantment\EnchantmentInstance;
 use pocketmine\item\enchantment\VanillaEnchantments;
 use pocketmine\item\VanillaItems;
 
 class Archer extends Kit
 {
+
+    /**
+     * @return Item[]
+     */
     public function getArmorItems(): array
     {
         return [
@@ -20,6 +24,9 @@ class Archer extends Kit
         ];
     }
 
+    /**
+     * @return Item[]
+     */
     public function getInventoryItems(): array
     {
         return [

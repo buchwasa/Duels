@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace practice\kits;
 
-use practice\kits\Kit;
 use pocketmine\item\enchantment\EnchantmentInstance;
 use pocketmine\item\enchantment\VanillaEnchantments;
+use pocketmine\item\Item;
 use pocketmine\item\ItemFactory;
 use pocketmine\item\ItemIds;
 use pocketmine\item\Potion;
@@ -13,6 +13,9 @@ use pocketmine\item\VanillaItems;
 
 class Combo extends Kit
 {
+    /**
+     * @return Item[]
+     */
     public function getArmorItems(): array
     {
         return [
@@ -27,6 +30,9 @@ class Combo extends Kit
         ];
     }
 
+    /**
+     * @return Item[]
+     */
     public function getInventoryItems(): array
     {
         return [

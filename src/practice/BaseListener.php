@@ -16,7 +16,6 @@ use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\item\ItemIds;
 use pocketmine\item\VanillaItems;
-use pocketmine\network\mcpe\protocol\PlaySoundPacket;
 use pocketmine\player\GameMode;
 use pocketmine\utils\TextFormat;
 use practice\kits\KitRegistry;
@@ -26,12 +25,12 @@ use xenialdan\customui\windows\SimpleForm;
 class BaseListener implements Listener
 {
 
-    public function onCreation(PlayerCreationEvent $event)
+    public function onCreation(PlayerCreationEvent $event): void
     {
         $event->setPlayerClass(PracticePlayer::class);
     }
 
-    public function onJoin(PlayerJoinEvent $event)
+    public function onJoin(PlayerJoinEvent $event): void
     {
         /** @var PracticePlayer $player */
         $player = $event->getPlayer();
@@ -40,7 +39,7 @@ class BaseListener implements Listener
         $player->giveLobbyItems();
     }
 
-    public function onQuit(PlayerQuitEvent $event)
+    public function onQuit(PlayerQuitEvent $event): void
     {
         /** @var PracticePlayer $player */
         $player = $event->getPlayer();
@@ -48,7 +47,7 @@ class BaseListener implements Listener
         $event->setQuitMessage("");
     }
 
-    public function onInteract(PlayerInteractEvent $ev)
+    public function onInteract(PlayerInteractEvent $ev): void
     {
         $player = $ev->getPlayer();
         $item = $ev->getItem();
@@ -83,7 +82,7 @@ class BaseListener implements Listener
         }
     }
 
-    public function onDamage(EntityDamageEvent $event)
+    public function onDamage(EntityDamageEvent $event): void
     {
         $entity = $event->getEntity();
         if ($entity instanceof PracticePlayer) {
@@ -97,14 +96,6 @@ class BaseListener implements Listener
                     /** @var PracticePlayer $damager */
                     $damager = $event->getDamager();
                     $damager->sendMessage(TextFormat::RED . "{$entity->getDisplayName()} is at " . floor($entity->getHealth() / 2) . " HP");
-                    $pk = new PlaySoundPacket();
-                    $pk->soundName = "random.orb";
-                    $pk->x = $damager->getPosition()->getFloorX();
-                    $pk->y = $damager->getPosition()->getFloorY();
-                    $pk->z = $damager->getPosition()->getFloorZ();
-                    $pk->volume = 1.0;
-                    $pk->pitch = 1.0;
-                    $damager->getNetworkSession()->sendDataPacket($pk);
                 }
 
                 if ($entity->isPlaying() && $event->getFinalDamage() >= $entity->getHealth()) {
@@ -121,7 +112,7 @@ class BaseListener implements Listener
         }
     }
 
-    public function onDrop(PlayerDropItemEvent $event)
+    public function onDrop(PlayerDropItemEvent $event): void
     {
         $player = $event->getPlayer();
         if ($player->getWorld()->getDisplayName() === $player->getServer()->getWorldManager()->getDefaultWorld()->getDisplayName()) {
@@ -145,13 +136,11 @@ class BaseListener implements Listener
         }
     }
 
-    public function onExhaust(PlayerExhaustEvent $event)
+    public function onExhaust(PlayerExhaustEvent $event): void
     {
         $player = $event->getPlayer();
-        if ($player instanceof PracticePlayer) {
-            if ($player->getWorld()->getDisplayName() === $player->getServer()->getWorldManager()->getDefaultWorld()->getDisplayName()) {
-                $event->cancel();
-            }
+        if ($player->getWorld()->getDisplayName() === $player->getWorld()->getServer()->getWorldManager()->getDefaultWorld()->getDisplayName()) {
+            $event->cancel();
         }
     }
 }

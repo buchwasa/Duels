@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace practice\kits;
 
+use pocketmine\item\Item;
 use pocketmine\item\ItemFactory;
 use pocketmine\item\ItemIds;
 use pocketmine\item\Potion;
@@ -10,6 +11,10 @@ use pocketmine\item\VanillaItems;
 
 class NoDebuff extends Kit
 {
+
+    /**
+     * @return Item[]
+     */
     public function getArmorItems(): array
     {
         return [
@@ -20,6 +25,9 @@ class NoDebuff extends Kit
         ];
     }
 
+    /**
+     * @return Item[]
+     */
     public function getInventoryItems(): array
     {
         $contents = [];

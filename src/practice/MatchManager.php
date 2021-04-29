@@ -2,13 +2,14 @@
 
 namespace practice;
 
-use pocketmine\uuid\UUID;
 use pocketmine\world\generator\Flat;
+use pocketmine\world\WorldCreationOptions;
 use practice\kits\Kit;
 use pocketmine\block\Block;
 use pocketmine\block\BlockLegacyIds;
 use pocketmine\utils\SingletonTrait;
 use practice\task\MatchTask;
+use Ramsey\Uuid\Uuid;
 
 class MatchManager
 {
@@ -25,12 +26,14 @@ class MatchManager
         self::$instance = $this;
     }
 
-    public function createMatch(PracticePlayer $player1, PracticePlayer $player2, Kit $kit)
+    public function createMatch(PracticePlayer $player1, PracticePlayer $player2, Kit $kit): void
     {
-        $worldName = "arena-" . UUID::fromRandom()->toString();
+        $worldName = "arena-" . Uuid::uuid4();
         $player1->getInventory()->clearAll();
         $player2->getInventory()->clearAll();
-        $this->plugin->getServer()->getWorldManager()->generateWorld($worldName, 0, Flat::class);
+        $creationOptions = new WorldCreationOptions();
+        $creationOptions->setGeneratorClass(Flat::class);
+        $this->plugin->getServer()->getWorldManager()->generateWorld($worldName,$creationOptions);
         $this->addMatch($worldName, new MatchTask($this->plugin, $worldName, $player1, $player2, $kit));
         $player1->setPlaying(true);
         $player2->setPlaying(true);
@@ -49,17 +52,20 @@ class MatchManager
         $this->plugin->deleteDir($this->plugin->getServer()->getDataPath() . "worlds/$name");
     }
 
+    /**
+     * @return MatchTask[]
+     */
     public function getMatches(): array
     {
         return $this->matches;
     }
 
-    public function setMatches(array $matches)
+    public function setMatches(array $matches): void
     {
         $this->matches = $matches;
     }
 
-    public function addMatch(string $name, MatchTask $task)
+    public function addMatch(string $name, MatchTask $task): void
     {
         $this->getMatches()[$name] = $task;
     }
@@ -69,7 +75,7 @@ class MatchManager
         return isset($this->getMatches()[$name]);
     }
 
-    public function removeMatch($name)
+    public function removeMatch($name): void
     {
         if ($this->isMatch($name)) {
             unset($this->matches[$name]);

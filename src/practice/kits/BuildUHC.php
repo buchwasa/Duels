@@ -4,11 +4,15 @@ declare(strict_types=1);
 namespace practice\kits;
 
 use pocketmine\block\VanillaBlocks;
+use pocketmine\item\Item;
 use pocketmine\item\VanillaItems;
 
 class BuildUHC extends Kit
 {
 
+    /**
+     * @return Item[]
+     */
     public function getArmorItems(): array
     {
         return [
@@ -19,6 +23,9 @@ class BuildUHC extends Kit
         ];
     }
 
+    /**
+     * @return Item[]
+     */
     public function getInventoryItems(): array
     {
         return [

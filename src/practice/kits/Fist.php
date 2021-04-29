@@ -3,13 +3,16 @@ declare(strict_types=1);
 
 namespace practice\kits;
 
-use practice\kits\Kit;
+use pocketmine\item\Item;
 use pocketmine\item\ItemFactory;
 use pocketmine\item\VanillaItems;
 
 class Fist extends Kit
 {
 
+    /**
+     * @return Item[]
+     */
     public function getArmorItems(): array
     {
         return [
@@ -17,6 +20,9 @@ class Fist extends Kit
         ];
     }
 
+    /**
+     * @return Item[]
+     */
     public function getInventoryItems(): array
     {
         return [
